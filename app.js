@@ -38,15 +38,13 @@ app.post("/login", async (req, res) => {
 });
 app.post('/signup', async (req, res) => {
   try {
-    console.log('SIGNUP BODY:', req.body);  // 1) check form data reaches server
-
+    console.log('SIGNUP BODY:', req.body); 
     const user = new User(req.body);
-    const savedUser = await user.save();     // 2) may throw
-
-    console.log('SAVED USER:', savedUser);   // 3) should appear if success
+    const savedUser = await user.save(); 
+    console.log('SAVED USER:', savedUser); 
     res.send(`✅ ${savedUser.name} created!`);
   } catch (err) {
-    console.error('SIGNUP ERROR:', err);     // 4) see exact cause
+    console.error('SIGNUP ERROR:', err);     
     res.send('Email already exists');
   }
 });
