@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Products - BuySellHub</title>
+</head>
+
+<body class="bg-gray-100 min-h-screen">
+    <nav class="bg-blue-600 p-4 text-white shadow-lg">
+        <div class="max-w-6xl mx-auto flex justify-between items-center">
+            <a href="/" class="text-2xl font-bold">BuySellHub</a>
+
+            <div class="flex items-center space-x-4">
+                <a href="/products" class="hover:underline">Browse Listings</a>
+
+                <% if (user) { %>
+                    <span class="text-sm">Welcome, <%= user.name %>!</span>
+                    <a href="/products/new"
+                        class="bg-white text-blue-600 px-4 py-2 rounded-lg font-semibold hover:bg-gray-100">
+                        + New Listing
+                    </a>
+                    <a href="/logout" class="hover:underline">Logout</a>
+                    <% } else { %>
+                        <a href="/login" class="hover:underline">Login</a>
+                        <a href="/signup" class="hover:underline">Sign Up</a>
+                        <% } %>
+            </div>
+        </div>
+    </nav>
+    <% if (success) { %>
+        <div class="mb-6 bg-green-100 border border-green-400 text-green-800 px-4 py-3 rounded">
+            <p class="font-semibold">
+                <%= success %>
+            </p>
+        </div>
+        <% } %>
+            <main class="max-w-6xl mx-auto p-8">
+                <h1 class="text-3xl font-bold text-gray-900 mb-8">All Listings</h1>
+
+                <% if (products.length===0) { %>
+                    <div class="text-center py-12">
+                        <p class="text-gray-500 text-lg">No products listed yet.</p>
+                        <% if (user) { %>
+                            <a href="/products/new"
+                                class="mt-4 inline-block bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700">
+                                Create First Listing
+                            </a>
+                            <% } %>
+                    </div>
+                    <% } else { %>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            <% products.forEach(product=> { %>
+                                <div
+                                    class="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
+                                    <% if (product.imageURL) { %>
+                                        <img src="<%= product.imageURL %>" alt="<%= product.title %>"
+                                            class="w-full h-48 object-cover">
+                                        <% } %>
+                                            <div class="p-6">
+                                                <h3 class="text-xl font-bold text-gray-900 mb-2">
+                                                    <%= product.title %>
+                                                </h3>
+                                                <p class="text-2xl font-semibold text-blue-600 mb-2">₹<%= product.price
+                                                        %>
+                                                </p>
+                                                <p class="text-gray-600 mb-4">
+                                                    <%= product.description.substring(0, 100) %>...
+                                                </p>
+                                                <div class="flex justify-between items-center text-sm">
+                                                    <span class="text-gray-500">by <%= product.seller.name %></span>
+                                                    <span class="text-xs text-gray-400">
+                                                        <%= new Date(product.createdAt).toLocaleDateString() %>
+                                                    </span>
+                                                </div>
+                                            </div>
+                                </div>
+                                <% }) %>
+                        </div>
+                        <% } %>
+            </main>
+</body>
+
+</html>

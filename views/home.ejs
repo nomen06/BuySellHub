@@ -8,16 +8,30 @@
 
 <body class="bg-gray-100 min-h-screen">
   <nav class="bg-blue-600 p-4 text-white shadow-lg">
-    <div class="max-w-4xl mx-auto flex justify-between items-center">
-      <h1 class="text-2xl font-bold">BuySellHub</h1>
-      <a href="/login" class="bg-white text-blue-600 px-4 py-2 rounded hover:bg-gray-100">Login</a>
+    <div class="max-w-6xl mx-auto flex justify-between items-center">
+      <a href="/" class="text-2xl font-bold">BuySellHub</a>
+
+      <div class="flex items-center space-x-4">
+        <a href="/products" class="hover:underline">Browse Listings</a>
+
+        <% if (user) { %>
+          <span class="text-sm">Welcome, <%= user.name %>!</span>
+          <a href="/products/new" class="bg-white text-blue-600 px-4 py-2 rounded-lg font-semibold hover:bg-gray-100">
+            + New Listing
+          </a>
+          <a href="/logout" class="hover:underline">Logout</a>
+          <% } else { %>
+            <a href="/login" class="hover:underline">Login</a>
+            <a href="/signup" class="hover:underline">Sign Up</a>
+            <% } %>
+      </div>
     </div>
   </nav>
   <main class="max-w-4xl mx-auto p-8">
     <h2 class="text-4xl font-bold text-gray-800 mb-6">Campus Marketplace</h2>
-    <p class="text-xl text-gray-600 mb-12">Buy & sell used items within your campus.</p>
-    <a href="/signup" class="bg-green-500 text-white px-8 py-4 rounded-lg text-lg font-semibold hover:bg-green-600">Get
-      Started</a>
+    <p class="text-xl text-gray-600 mb-12">
+      Buy & sell used items within your campus.
+    </p>
   </main>
 </body>
 
