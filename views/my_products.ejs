@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>My Listings - BuySellHub</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gray-50 min-h-screen">
+    <%- include('partials/header') %>
+
+        <main class="max-w-6xl mx-auto p-8">
+            <% if (success) { %>
+                <div class="mb-6 bg-green-100 border border-green-400 text-green-800 px-4 py-3 rounded-lg">
+                    <%= success %>
+                </div>
+                <% } %>
+
+                    <% if (error) { %>
+                        <div class="mb-6 bg-red-100 border border-red-400 text-red-800 px-4 py-3 rounded-lg">
+                            <%= error %>
+                        </div>
+                        <% } %>
+
+                            <div class="bg-white rounded-2xl shadow-lg p-8 mb-8">
+                                <div class="flex justify-between items-center mb-6">
+                                    <h1 class="text-3xl font-bold text-gray-900">My Listings</h1>
+                                    <a href="/products/new"
+                                        class="bg-blue-600 text-white px-6 py-2 rounded-xl font-semibold hover:bg-blue-700">
+                                        + New Listing
+                                    </a>
+                                </div>
+
+                                <% if (products.length===0) { %>
+                                    <div class="text-center py-12">
+                                        <p class="text-xl text-gray-600 mb-4">No listings yet</p>
+                                        <a href="/products/new"
+                                            class="bg-emerald-600 text-white px-8 py-3 rounded-xl font-semibold hover:bg-emerald-700">
+                                            Create Your First Listing
+                                        </a>
+                                    </div>
+                                    <% } else { %>
+                                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                            <% products.forEach(product=> { %>
+                                                <div
+                                                    class="group relative bg-white rounded-xl shadow-md hover:shadow-xl p-6 border hover:border-blue-200 transition-all">
+                                                    <% if (product.imageURL) { %>
+                                                        <img src="<%= product.imageURL %>" alt="<%= product.title %>"
+                                                            class="w-full h-48 object-cover rounded-lg mb-4 group-hover:opacity-90">
+                                                        <% } %>
+                                                            <h3 class="font-bold text-lg mb-2">
+                                                                <%= product.title %>
+                                                            </h3>
+                                                            <p class="text-2xl font-bold text-blue-600 mb-4">₹<%=
+                                                                    product.price %>
+                                                            </p>
+                                                            <div class="flex gap-2">
+                                                                <a href="/products/<%= product._id %>"
+                                                                    class="flex-1 bg-gray-100 text-gray-900 py-2 px-4 rounded-lg text-center hover:bg-gray-200">
+                                                                    View
+                                                                </a>
+                                                                <a href="/products/<%= product._id %>/edit"
+                                                                    class="flex-1 bg-yellow-500 text-white py-2 px-4 rounded-lg text-center hover:bg-yellow-600 font-medium">
+                                                                    Edit
+                                                                </a>
+                                                                <form action="/products/<%= product._id %>/delete"
+                                                                    method="POST" class="flex-1">
+                                                                    <button type="submit"
+                                                                        class="w-full bg-red-500 text-white py-2 px-4 rounded-lg hover:bg-red-600 font-medium"
+                                                                        onclick="return confirm('Delete this listing?')">
+                                                                        Delete
+                                                                    </button>
+                                                                </form>
+                                                            </div>
+                                                </div>
+                                                <% }) %>
+                                        </div>
+                                        <% } %>
+                            </div>
+        </main>
+        <%- include('partials/footer') %>
+
+</body>
+
+</html>

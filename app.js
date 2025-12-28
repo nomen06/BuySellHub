@@ -13,8 +13,8 @@ app.use(
     secret: process.env.session_secret || "secreeet",
     resave: false,
     saveUninitialized: false,
-    cookie:{
-      maxAge:1000*60*60
+    cookie: {
+      maxAge: 1000 * 60 * 60,
     },
   })
 );
@@ -72,23 +72,82 @@ app.get("/logout", (req, res) => {
     res.redirect("/");
   });
 });
+
 app.get("/products", async (req, res) => {
   try {
     const products = await Product.find().populate("seller", "name");
-console.log("PRODUCTS COUNT:", products.length);
-console.log("LAST PRODUCT:", products[products.length - 1]);
-res.render("products", { products });
+    console.log("PRODUCTS COUNT:", products.length);
+    console.log("LAST PRODUCT:", products[products.length - 1]);
+    res.render("products", { products });
   } catch (err) {
-    console.error("Fetching error: ",err)
-    res.status(500).send("server error")
+    console.error("Fetching error: ", err);
+    res.status(500).send("server error");
   }
 });
+
 app.get("/products/new", (req, res) => {
-  if(!req.session.userId){
-    req.session.error = "Please login first."
-    return res.redirect('/login')
+  if (!req.session.userId) {
+    req.session.error = "Please login first.";
+    return res.redirect("/login");
   }
   res.render("products/new");
+});
+
+app.get("/products/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const product = await Product.findById(id).populate("seller", "name email");
+    if (!product) {
+      req.session.error = "No such product was found";
+      return res.redirect("/products");
+    }
+    res.render("products/show", { product });
+  } catch (err) {
+    console.error("Product show error : ", err);
+    req.session.error = "Error in showing product";
+    return res.redirect("/products");
+  }
+});
+
+app.get("/products/:id/edit", async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!req.session.userId) {
+      req.session.error = "Login required";
+      return res.redirect("/login");
+    }
+
+    const product = await Product.findById(id).populate("seller", "name");
+    if (!product || product.seller._id.toString() !== req.session.userId) {
+      req.session.error = "Not authorized";
+      return res.redirect("/products");
+    }
+
+    res.render("products/edit", { product });
+  } catch (err) {
+    console.error(err);
+    req.session.error = "Error loading edit form";
+    res.redirect("/products");
+  }
+});
+
+app.get("/my/products", async (req, res) => {
+  if (!req.session.userId) {
+    req.session.error = "Please login first";
+    return res.redirect("/login");
+  }
+  try {
+    const products = await Product.find({
+      seller: req.session.userId,
+    })
+      .populate("seller", "name")
+      .sort({ createdAt: -1 });
+    res.render("my_products", { products });
+  } catch (err) {
+    console.log(err);
+    req.session.error = "Loading error";
+    return res.redirect("/products");
+  }
 });
 
 app.post("/login", async (req, res) => {
@@ -119,48 +178,6 @@ app.post("/login", async (req, res) => {
   }
 });
 
-app.post("/products",async (req,res)=>{
-  if (!req.session.userId) {
-    req.session.error = "You must be logged in first";
-    return res.redirect("/login");
-  }
-  const { price, title, description, imageURL } = req.body;
-  if (!price) {
-    req.session.error = "Please enter price for item.";
-    res.redirect("/products/new");
-  } else if (!title) {
-    req.session.error = "Please enter the title of item.";
-    res.redirect("/products/new");
-  } else if (!description) {
-    req.session.error = "Some description is required for the item";
-    res.redirect("/products/new");
-  }
-  if (Number(price) < 0) {
-    req.session.error = "Price cannot be negative.";
-    res.redirect("/products/new");
-  }
-  try {
-    const product = new Product({
-      title,
-      price,
-      description,
-      imageURL,
-      seller: req.session.userId,
-    });
-    await product.save()
-    req.session.success = "Listing created successfully";
-    res.redirect("/products");
-  } catch (err) {
-    console.log("ERROR SAVE PRODUCT DETAILS:", {
-      name: err.name,
-      message: err.message,
-      errors: err.errors,
-    });
-    req.session.error = "Error in saving product, Please try again";
-    res.redirect("/products/new");
-  }
-})
-
 app.post("/signup", async (req, res) => {
   try {
     const user = new User(req.body);
@@ -184,6 +201,109 @@ app.post("/signup", async (req, res) => {
   }
 });
 
+app.post("/products", async (req, res) => {
+  if (!req.session.userId) {
+    req.session.error = "You must be logged in first";
+    return res.redirect("/login");
+  }
+  const { price, title, description, imageURL } = req.body;
+  if (!price) {
+    req.session.error = "Please enter price for item.";
+    return res.redirect("/products/new");
+  } else if (!title) {
+    req.session.error = "Please enter the title of item.";
+    return res.redirect("/products/new");
+  } else if (!description) {
+    req.session.error = "Some description is required for the item";
+    return res.redirect("/products/new");
+  } else if (!imageURL) {
+    req.session.error = "Please provide image url";
+    return res.redirect("/products/new");
+  }
+  if (Number(price) < 0) {
+    req.session.error = "Price cannot be negative.";
+    return res.redirect("/products/new");
+  }
+  try {
+    const product = new Product({
+      title,
+      price,
+      description,
+      imageURL,
+      seller: req.session.userId,
+    });
+    await product.save();
+    req.session.success = "Listing created successfully";
+    return res.redirect("/products");
+  } catch (err) {
+    console.log("ERROR SAVE PRODUCT DETAILS:", {
+      name: err.name,
+      message: err.message,
+      errors: err.errors,
+    });
+    req.session.error = "Error in saving product, Please try again";
+    return res.redirect("/products/new");
+  }
+});
+
+app.post("/products/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!req.session.userId) {
+      req.session.error = "You need to login first";
+      return res.redirect("/login");
+    }
+    const product = await Product.findById(id).populate("seller", "name email");
+    if (product.seller._id.toString() != req.session.userId) {
+      req.session.error = "Not authorized";
+      return res.redirect("/products");
+    }
+    if (!product) {
+      req.session.error = "No such product was found";
+      return res.redirect("/products");
+    }
+
+    await Product.findByIdAndUpdate(id, {
+      title: req.body.title,
+      price: req.body.price,
+      description: req.body.description,
+      imageURL: req.body.imageURL,
+    });
+    req.session.success = "Product updated successfully";
+    return res.redirect("products/show", { product });
+  } catch (err) {
+    console.error("Product show error : ", err);
+    req.session.error = "Update failed";
+    return res.redirect(`/products`);
+  }
+});
+
+app.post("/products/:id/delete", async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!req.session.userId) {
+      req.session.error = "You need to login first";
+      res.redirect("/login");
+    }
+    const product = await Product.findById(id).populate("seller", "name email");
+    if (product.seller._id.toString() != req.session.userId) {
+      req.session.error = "Not authorized";
+      res.redirect("/products");
+    }
+    if (!product) {
+      req.session.error = "No such product was found";
+      return res.redirect("/products");
+    }
+
+    await Product.findByIdAndDelete(id);
+    req.session.success = "Product deleted successfully";
+    return res.redirect("products/show", { product });
+  } catch (err) {
+    console.error("Product show error : ", err);
+    req.session.error = "Delete failed";
+    return res.redirect(`/products`);
+  }
+});
 app.listen(port, () => {
   console.log(`BuySellHub on http://localhost:${port}`);
 });
